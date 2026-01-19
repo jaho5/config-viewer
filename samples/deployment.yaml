@@ -1,0 +1,122 @@
+# Deployment Configuration
+# This file defines infrastructure and deployment settings for application services
+
+# deployment: Application deployment configuration
+#   @doc: Root configuration for deploying the application service
+deployment:
+  # environment: Target deployment environment
+  #   @doc: Specifies which environment this deployment targets
+  #   @options: development | staging | production
+  #   @default: development
+  #   @why: development - for local testing and rapid iteration; staging - for pre-production validation; production - for live traffic
+  environment: production
+
+  # replicas: Number of application instances
+  #   @doc: Number of replicas to maintain for this deployment
+  #   @default: 3
+  #   @warn: Increasing replicas will increase infrastructure costs. Each replica consumes allocated CPU and memory resources.
+  replicas: 3
+
+  # resources: Resource allocation and limits
+  #   @doc: Define CPU, memory, and GPU resource constraints for each replica
+  resources:
+    # cpu_limit: Maximum CPU cores per replica
+    #   @doc: Maximum CPU cores allocated to each replica
+    #   @default: "1000m"
+    #   @options: "100m" | "250m" | "500m" | "1000m" | "2000m"
+    cpu_limit: "1000m"
+
+    # memory_limit: Maximum memory per replica
+    #   @doc: Maximum memory (in megabytes) allocated to each replica
+    #   @default: "512Mi"
+    #   @options: "128Mi" | "256Mi" | "512Mi" | "1Gi" | "2Gi" | "4Gi"
+    #   @warn: Insufficient memory will cause OOM (Out of Memory) errors and pod eviction. Allocate extra 20% headroom above peak usage.
+    memory_limit: "512Mi"
+
+    # gpu_enabled: Enable GPU acceleration
+    #   @doc: Whether to attach GPU resources to replicas
+    #   @default: false
+    #   @warn: GPU resources are significantly more expensive than CPU. Only enable for compute-intensive workloads (ML inference, rendering, etc).
+    gpu_enabled: false
+
+  # scaling: Auto-scaling configuration
+  #   @doc: Configure horizontal pod autoscaling based on metrics
+  scaling:
+    # auto_scale: Enable horizontal pod autoscaling
+    #   @doc: Automatically scale the number of replicas based on demand
+    #   @default: true
+    auto_scale: true
+
+    # min_replicas: Minimum number of replicas
+    #   @doc: Minimum number of replicas to maintain even during low load
+    #   @default: 2
+    #   @warn: Setting too low may cause service degradation during traffic spikes. Minimum recommended is 2 for redundancy.
+    min_replicas: 2
+
+    # max_replicas: Maximum number of replicas
+    #   @doc: Maximum number of replicas to scale up to
+    #   @default: 10
+    #   @warn: This acts as a cost control mechanism. Extremely high values may lead to unexpected infrastructure bills.
+    max_replicas: 10
+
+    # target_cpu_percent: CPU utilization threshold for scaling
+    #   @doc: Target CPU utilization percentage at which to trigger scaling decisions
+    #   @default: 70
+    #   @options: "50" | "70" | "80" | "90"
+    #   @why: 50 - aggressive scaling for latency-sensitive services; 70 - balanced for most workloads; 80 - conservative for cost optimization; 90 - minimal scaling for bursty workloads
+    target_cpu_percent: 70
+
+  # health_check: Service health monitoring and readiness probes
+  #   @doc: Configure health checks to ensure only healthy replicas receive traffic
+  health_check:
+    # enabled: Enable health checks
+    #   @doc: Whether to perform periodic health checks on replicas
+    #   @default: true
+    enabled: true
+
+    # path: Health check endpoint
+    #   @doc: HTTP endpoint path to probe for health status
+    #   @default: "/health"
+    path: "/health"
+
+    # interval: Seconds between health checks
+    #   @doc: Interval in seconds between consecutive health checks
+    #   @default: 10
+    #   @options: "5" | "10" | "15" | "30"
+    #   @why: 5 - quick detection of failures, higher overhead; 10 - standard choice for most services; 15 - reduced check frequency for reliable services; 30 - minimal overhead for stable services
+    interval: 10
+
+    # timeout: Health check timeout in seconds
+    #   @doc: Maximum seconds to wait for health check response before marking as failed
+    #   @default: 3
+    #   @warn: If timeout is too short, temporary network latency may cause false failures. Should be less than half of interval.
+    timeout: 3
+
+  # rollout: Deployment update strategy
+  #   @doc: Configure how updates are rolled out to existing replicas
+  rollout:
+    # strategy: Update deployment strategy
+    #   @doc: Strategy for rolling out new versions of the application
+    #   @options: rolling | blue_green | canary
+    #   @default: rolling
+    #   @why: rolling - gradual replacement of old replicas, minimal downtime, but mixed versions during update; blue_green - instantaneous switchover, zero downtime, requires double resources temporarily; canary - staged rollout to subset of replicas first, validates before full rollout, best for risk mitigation
+    strategy: rolling
+
+    # max_surge: Maximum replicas above desired count during update
+    #   @doc: Maximum number of additional replicas allowed during rolling updates
+    #   @default: 1
+    #   @warn: Higher values speed up updates but temporarily increase resource consumption and costs.
+    max_surge: 1
+
+    # max_unavailable: Maximum replicas that can be unavailable during update
+    #   @doc: Maximum number of replicas that can be offline during rolling updates
+    #   @default: 0
+    #   @warn: Setting to 0 ensures zero downtime but requires sufficient resources for max_surge. Setting > 0 may cause brief service interruptions.
+    max_unavailable: 0
+
+    # canary_percent: Percentage of traffic for canary deployment
+    #   @doc: Percentage of traffic to send to new version in canary rollout (only used when strategy is canary)
+    #   @default: 10
+    #   @options: "5" | "10" | "25" | "50"
+    #   @why: 5 - minimal risk, very conservative; 10 - standard canary approach; 25 - faster validation; 50 - aggressive canary testing
+    canary_percent: 10

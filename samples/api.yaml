@@ -1,0 +1,103 @@
+# api: API/Web Service Configuration
+#   @doc: Configuration settings for the API server and its features
+api:
+  # version: API Protocol Version
+  #   @doc: The API version to enforce on all endpoints
+  #   @default: v1
+  #   @warn: Changing this may break client compatibility
+  version: v1
+
+  # base_path: Base URL Path
+  #   @doc: The root path prefix for all API endpoints
+  #   @default: /api
+  #   @why: Use shorter paths for better performance, longer paths for clarity and routing control
+  base_path: /api
+
+  # rate_limiting: Request Rate Control Configuration
+  #   @doc: Configure request throttling and burst allowance for API protection
+  rate_limiting:
+    # enabled: Enable Rate Limiting
+    #   @doc: Whether to apply rate limiting to incoming requests
+    #   @options: true | false
+    #   @default: true
+    #   @why: Enable for production to prevent abuse; disable for development/testing
+    enabled: true
+
+    # requests_per_minute: Requests Per Minute Limit
+    #   @doc: Maximum number of requests allowed per minute per client
+    #   @default: 60
+    #   @warn: Set too low may reject legitimate traffic; too high reduces protection
+    requests_per_minute: 60
+
+    # burst_size: Burst Request Allowance
+    #   @doc: Number of additional requests allowed in a burst above the rate limit
+    #   @default: 10
+    #   @why: Allows temporary traffic spikes while maintaining average rate control
+    burst_size: 10
+
+  # cors: Cross-Origin Resource Sharing Configuration
+  #   @doc: Control how resources can be accessed from different origins
+  cors:
+    # enabled: Enable CORS
+    #   @doc: Whether to allow cross-origin requests
+    #   @options: true | false
+    #   @default: true
+    #   @why: Enable for public APIs; disable for internal-only APIs
+    enabled: true
+
+    # allowed_origins: Permitted Origins
+    #   @doc: List of origins allowed to access the API
+    #   @multi: true
+    #   @default: []
+    #   @warn: Use wildcards sparingly as they expose your API to any origin
+    allowed_origins:
+      - https://example.com
+      - https://app.example.com
+      - https://admin.example.com
+
+    # allowed_methods: Permitted HTTP Methods
+    #   @doc: HTTP methods that clients are allowed to use
+    #   @multi: true
+    #   @options: GET | POST | PUT | PATCH | DELETE | OPTIONS | HEAD
+    #   @default: GET,POST,PUT,DELETE
+    #   @why: GET/POST for basic operations; PUT/PATCH for updates; DELETE for removal; OPTIONS for CORS preflight
+    allowed_methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+
+    # max_age: CORS Cache Duration
+    #   @doc: How long (in seconds) browsers can cache CORS preflight responses
+    #   @default: 3600
+    #   @why: Higher values reduce preflight requests; lower values allow faster config updates
+    max_age: 3600
+
+  # authentication: User Authentication Configuration
+  #   @doc: Mechanism for verifying client identity and authorization
+  authentication:
+    # type: Authentication Type
+    #   @doc: The protocol used to authenticate API clients
+    #   @options: jwt | oauth2 | api_key | basic
+    #   @why: |
+    #     jwt - Stateless token-based auth, best for microservices and SPAs
+    #     oauth2 - Delegated auth with external providers, best for third-party integrations
+    #     api_key - Simple token-based auth, best for server-to-server communication
+    #     basic - Username/password encoding, best for simple internal APIs (NOT for production)
+    #   @default: jwt
+    #   @warn: basic auth transmits credentials in every request; only use over HTTPS
+    type: jwt
+
+    # token_expiry: Token Expiration Time
+    #   @doc: Duration in seconds before authentication tokens expire
+    #   @default: 3600
+    #   @why: Short expiry improves security; long expiry reduces token refresh overhead
+    token_expiry: 3600
+
+    # refresh_enabled: Allow Token Refresh
+    #   @doc: Whether clients can refresh expired tokens without re-authenticating
+    #   @options: true | false
+    #   @default: true
+    #   @why: Enable for better user experience; disable for stricter security requirements
+    refresh_enabled: true

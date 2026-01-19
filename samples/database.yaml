@@ -1,0 +1,213 @@
+# database: Database Configuration
+#   @doc: Primary database configuration for application data storage and connection management
+#   @warn: Ensure all database credentials are secure and not committed to version control
+database:
+  # type: Database engine type
+  #   @doc: The SQL/NoSQL engine to use for primary data storage
+  #   @options: postgres | mysql | sqlite | mongodb
+  #   @default: postgres
+  #   @why:
+  #     postgres: Enterprise-grade RDBMS, best for complex transactions and ACID compliance
+  #     mysql: Lightweight relational DB, good for standard web applications
+  #     sqlite: File-based, suitable for development and small deployments
+  #     mongodb: NoSQL document store, ideal for unstructured/semi-structured data
+  type: postgres
+
+  # host: Database server hostname
+  #   @doc: Network address or hostname where the database server is running
+  #   @options: localhost | 127.0.0.1 | <hostname> | db.example.com
+  #   @default: localhost
+  #   @warn: Use 127.0.0.1 instead of localhost for improved connection speed in Docker
+  host: localhost
+
+  # port: Database server port
+  #   @doc: Network port number for database server connection
+  #   @options: 5432 | 3306 | 5984 | 27017 | 1433-65535
+  #   @default: 5432
+  #   @why:
+  #     5432: Default PostgreSQL port
+  #     3306: Default MySQL port
+  #     27017: Default MongoDB port
+  port: 5432
+
+  # name: Database name
+  #   @doc: Name of the database or schema to connect to on the server
+  #   @default: app_development
+  #   @warn: Database must be created before application startup
+  name: app_development
+
+  # username: Database user account
+  #   @doc: Username for database authentication
+  #   @default: postgres
+  #   @warn: Never use default credentials in production. Use environment variables or secrets management
+  username: postgres
+
+  # password: Database user password
+  #   @doc: Password for database user authentication
+  #   @warn: CRITICAL: Do not commit passwords to version control. Use environment variables (DB_PASSWORD)
+  password: ""
+
+  # pool: Connection pooling configuration
+  #   @doc: Settings for managing database connection pools to optimize resource usage
+  pool:
+    # min_connections: Minimum number of pooled connections
+    #   @doc: Minimum connections to maintain in the pool at all times
+    #   @options: 1-100
+    #   @default: 5
+    #   @why: Ensures quick response for common query patterns without excessive overhead
+    min_connections: 5
+
+    # max_connections: Maximum number of pooled connections
+    #   @doc: Hard limit on total concurrent database connections
+    #   @options: 10-1000
+    #   @default: 20
+    #   @warn: Higher values consume more memory. Monitor system resources. Each connection uses ~5-10MB RAM
+    max_connections: 20
+
+    # idle_timeout: Seconds to keep idle connections before closing
+    #   @doc: Duration in seconds a connection can remain idle before being closed
+    #   @options: 30-3600
+    #   @default: 300
+    #   @why:
+    #     60-120: Aggressive cleanup for resource-constrained environments
+    #     300-600: Standard for most applications
+    #     900+: For applications with steady background load
+    idle_timeout: 300
+
+    # validation_interval: Seconds between connection validation checks
+    #   @doc: How often to verify idle connections are still valid and usable
+    #   @options: 10-120
+    #   @default: 30
+    validation_interval: 30
+
+    # max_lifetime: Maximum seconds a connection can live before being recycled
+    #   @doc: Hard limit for connection age to prevent long-lived connection issues
+    #   @options: 600-86400
+    #   @default: 3600
+    #   @warn: Set below database server timeout to avoid unexpected disconnections
+    max_lifetime: 3600
+
+  # ssl: SSL/TLS encryption configuration
+  #   @doc: Secure socket layer settings for encrypted database connections
+  ssl:
+    # enabled: Enable SSL/TLS encryption for database connections
+    #   @doc: Whether to require encrypted connections to the database
+    #   @options: true | false
+    #   @default: false
+    #   @warn: Set to true in production. Unencrypted connections expose sensitive data
+    enabled: false
+
+    # mode: SSL verification mode
+    #   @doc: How strictly to validate the database server's SSL certificate
+    #   @options: disable | allow | prefer | require | verify-ca | verify-full
+    #   @default: prefer
+    #   @why:
+    #     disable: No SSL/TLS encryption
+    #     allow: Connection over SSL if supported, fallback to unencrypted
+    #     prefer: Request SSL, accept unencrypted if SSL fails
+    #     require: Refuse connection unless SSL is available
+    #     verify-ca: Require SSL and verify server certificate signed by trusted CA
+    #     verify-full: Require SSL and verify server identity matches hostname
+    mode: prefer
+
+    # ca_cert_path: Path to CA certificate file
+    #   @doc: Filesystem path to the trusted CA certificate for SSL verification
+    #   @options: /path/to/ca.pem | /etc/ssl/certs/ca-bundle.crt
+    #   @warn: Required when mode is verify-ca or verify-full. File must be readable by application
+    ca_cert_path: ""
+
+    # client_cert_path: Path to client certificate file
+    #   @doc: Filesystem path to the client certificate for mutual TLS authentication
+    #   @default: ""
+    #   @warn: Only needed if database requires client certificate authentication
+    client_cert_path: ""
+
+    # client_key_path: Path to client private key file
+    #   @doc: Filesystem path to the private key corresponding to client certificate
+    #   @default: ""
+    #   @warn: CRITICAL: Protect this file with restricted permissions (chmod 600). Never commit to version control
+    client_key_path: ""
+
+  # replica: Read replica configuration (optional)
+  #   @doc: Settings for distributing read queries across replica instances
+  replica:
+    # enabled: Enable read replica routing
+    #   @doc: Whether to use read replicas for SELECT queries
+    #   @options: true | false
+    #   @default: false
+    enabled: false
+
+    # hosts: List of replica hostnames
+    #   @doc: Network addresses of read replica database servers
+    #   @multi: true
+    #   @warn: Must be real replica instances synchronized with primary. Read-only is not enforced by this config
+    hosts: []
+
+    # strategy: Load balancing strategy for replica selection
+    #   @doc: How to choose which replica to use for read queries
+    #   @options: round-robin | random | least-connections
+    #   @default: round-robin
+    strategy: round-robin
+
+  # backup: Backup and recovery configuration
+  #   @doc: Settings for database backup scheduling and retention
+  backup:
+    # enabled: Enable automatic backups
+    #   @doc: Whether to perform scheduled database backups
+    #   @options: true | false
+    #   @default: true
+    enabled: true
+
+    # schedule: Backup schedule in cron format
+    #   @doc: Cron expression for automated backup timing
+    #   @options: "0 2 * * *" | "0 */6 * * *" | "0 0 * * 0"
+    #   @default: "0 2 * * *"
+    #   @why:
+    #     "0 2 * * *": Daily at 2 AM
+    #     "0 */6 * * *": Every 6 hours
+    #     "0 0 * * 0": Weekly on Sunday at midnight
+    schedule: "0 2 * * *"
+
+    # retention_days: Number of days to keep backups
+    #   @doc: How long to retain backup files before automatic deletion
+    #   @options: 7-3650
+    #   @default: 30
+    #   @warn: Deleting old backups saves storage but limits recovery window
+    retention_days: 30
+
+    # backup_path: Directory for backup files
+    #   @doc: Filesystem directory where database backups are stored
+    #   @default: /var/backups/database
+    #   @warn: Must be on filesystem with sufficient free space. Ensure proper permissions and backups to separate storage
+    backup_path: /var/backups/database
+
+  # monitoring: Database monitoring and alerting
+  #   @doc: Metrics collection and health check configuration
+  monitoring:
+    # enabled: Enable performance monitoring
+    #   @doc: Whether to collect database performance metrics
+    #   @options: true | false
+    #   @default: true
+    enabled: true
+
+    # slow_query_threshold_ms: Milliseconds threshold for slow query logging
+    #   @doc: Queries exceeding this duration are logged as slow queries
+    #   @options: 100-10000
+    #   @default: 1000
+    #   @why:
+    #     100-500: Very strict, catches minor performance issues
+    #     1000: Standard threshold for most applications
+    #     5000+: Only logs significantly slow queries
+    slow_query_threshold_ms: 1000
+
+    # health_check_interval: Seconds between database health checks
+    #   @doc: How frequently to verify database connectivity and responsiveness
+    #   @options: 10-300
+    #   @default: 30
+    health_check_interval: 30
+
+    # metrics_retention_days: Days to retain performance metrics
+    #   @doc: How long to keep collected monitoring data before cleanup
+    #   @options: 7-365
+    #   @default: 30
+    metrics_retention_days: 30
