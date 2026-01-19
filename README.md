@@ -1,38 +1,48 @@
-# sv
+# Config Viewer
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A Svelte 5 app for viewing and editing YAML configuration files with embedded documentation.
 
-## Creating a project
+![Config Viewer](https://img.shields.io/badge/Svelte-5-orange) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
 
-If you're seeing this, you've probably already done this step. Congrats!
+## Features
 
-```sh
-# create a new project in the current directory
-npx sv create
+- **Self-documenting configs** - Parse YAML with `@doc`, `@options`, `@default`, `@why`, `@warn`, `@multi` tags
+- **Tree view** - Expand/collapse nested config sections
+- **Inline editing** - Click values to edit, click options to select
+- **Multi-select support** - Array fields with `[value1, value2]` format
+- **Export** - Copy modified config to clipboard
+- **Load files** - Import YAML configs via file picker
 
-# create a new project in my-app
-npx sv create my-app
+## Documented YAML Format
+
+```yaml
+# server:
+#   @doc: HTTP server settings
+server:
+  # host: localhost
+  #   @options: localhost | 0.0.0.0 | <hostname>
+  #   @default: localhost
+  #   @doc: Bind address for the server
+  #   @why:
+  #     localhost — local only, secure default
+  #     0.0.0.0   — all interfaces, for containers
+  host: localhost
 ```
 
-## Developing
+See [docs/CONFIG_FORMAT.md](docs/CONFIG_FORMAT.md) for the full specification.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+## Getting Started
 
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+```bash
+bun install
+bun run dev --host
 ```
 
-## Building
+Open http://localhost:5173
 
-To create a production version of your app:
+## Sample Configs
 
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Sample configuration files in `samples/`:
+- `database.yaml` - Database connection settings
+- `api.yaml` - API/web service configuration
+- `deployment.yaml` - Infrastructure/deployment settings
